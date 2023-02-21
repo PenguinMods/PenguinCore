@@ -2,6 +2,8 @@ plugins {
 	id 'eclipse'
 	id 'fabric-loom' version '1.0-SNAPSHOT'
 	id 'maven-publish'
+	id 'com.modrinth.minotaur' version '2.+'
+	id 'co.uzzu.dotenv.gradle' version '2.+'
 }
 
 archivesBaseName = project.archives_base_name
@@ -19,14 +21,48 @@ dependencies {
 }
 
 processResources {
-	inputs.properties project.properties
+	def props = new HashMap<String, String>();
+	
+	project.properties.each {
+		if(project.getProviders().gradleProperty(it.key).isPresent() && !it.key.startsWith("org.gradle.")) {
+			props.put(it.key, it.value)
+		}
+	}
+	
+	inputs.properties props
 
 	filesMatching(Arrays.asList(
 		"fabric.mod.json".toString(),
 		"${modid}.mixins.json".toString()
 	)) {
-		expand project.properties
+		expand props
 	}
+	
+	doLast {
+		println "Properties being passed to Fabric:"
+		println props
+		
+		println ""
+		
+		println "Creating properties file for runtime..."
+		def propertiesObj = new Properties()
+		propertiesObj.putAll(props)
+		
+		def file = new File(sourceSets.main.output.resourcesDir, "info.properties")
+		propertiesObj.store(new FileOutputStream(file), "Auto-generated from gradle.properties");
+		println "Done!"
+	}
+}
+
+modrinth {
+	token = env.MODRINTH_TOKEN.orNull()
+	projectId = project.modid
+	versionNumber = project.mod_version
+	versionType = project.version_type
+	versionName = "${project.name} v${project.mod_version}"
+	gameVersions = [ '1.19.2', '1.19.3' ]
+	uploadFile = remapJar
+	debugMode = true
 }
 
 sourceSets {

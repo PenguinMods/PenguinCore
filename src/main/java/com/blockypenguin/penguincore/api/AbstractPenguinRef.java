@@ -1,5 +1,6 @@
 package com.blockypenguin.penguincore.api;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -7,8 +8,16 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.blockypenguin.penguincore.exceptions.MissingRequiredConstructorException;
+
 import net.minecraft.util.Identifier;
 
+/**
+ * <p>Abstract class to store information about your mod and provide helpful methods that utilise it.</p>
+ * <p>It is recommended that you implement a {@code static getInstance()} method which calls
+ * {@link #getRef(Class) getRef()} or {@link #getRefOrElse(Class, AbstractPenguinRef) getRefOrElse()}
+ * to return the instance of your exact Ref class.</p>
+ */
 public abstract class AbstractPenguinRef {
 	private static final Map<Class<? extends AbstractPenguinRef>, AbstractPenguinRef> INSTANCE_MAP = new HashMap<>();
 	
@@ -68,6 +77,26 @@ public abstract class AbstractPenguinRef {
 	 */
 	public static <T extends AbstractPenguinRef> Optional<T> getRef(Class<T> clazz) {
 		return Optional.ofNullable(getRefOrElse(clazz, null));
+	}
+	
+	/**
+	 * Returns an instance of a subclass of {@code AbstractPenguinRef}, designated by the given {@code clazz}.
+	 * If one has not yet been created, it will be instantiated and added to the {@link #INSTANCE_MAP}.
+	 * 
+	 * @param <T> The subtype of the instance of {@code AbstractPenguinRef}
+	 * @param clazz The class of the subtype of {@code AbstractPenguinRef}
+	 * @return Either the requested instance or a new instance of it if none exists
+	 * @see #getRefOrElse(Class, AbstractPenguinRef) getRefOrElse()
+	 * @throws MissingRequiredConstructorException if {@code T} doesn't have a no-args constructor.
+	 */
+	public static <T extends AbstractPenguinRef> T getRefOrCreate(Class<T> clazz) {
+		return getRef(clazz).orElseGet(() -> {
+			try {
+				return clazz.getDeclaredConstructor().newInstance();
+			}catch(InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
+				throw new MissingRequiredConstructorException(clazz, e);
+			}
+		});
 	}
 	
 	/**

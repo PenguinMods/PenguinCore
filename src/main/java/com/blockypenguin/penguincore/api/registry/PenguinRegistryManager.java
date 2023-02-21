@@ -1,5 +1,7 @@
 package com.blockypenguin.penguincore.api.registry;
 
+import com.blockypenguin.penguincore.api.AbstractPenguinRef;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.enchantment.Enchantment;
@@ -9,12 +11,12 @@ import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 
-public class PenguinRegistryManager {
+public final class PenguinRegistryManager {
 	
 	private final String namespace;
 	
-	public PenguinRegistryManager(String namespace) {
-		this.namespace = namespace;
+	public PenguinRegistryManager(AbstractPenguinRef ref) {
+		this.namespace = ref.getModId();
 	}
 	
 	public <T extends Block> T register(T object, String name) {
