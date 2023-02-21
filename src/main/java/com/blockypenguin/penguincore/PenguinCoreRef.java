@@ -8,6 +8,6 @@ public class PenguinCoreRef extends AbstractPenguinRef {
 	}
 	
 	public static PenguinCoreRef getInstance() {
-		return AbstractPenguinRef.getRef(PenguinCoreRef.class).get();
+		return AbstractPenguinRef.getRefOrCreate(PenguinCoreRef.class);
 	}
 }
